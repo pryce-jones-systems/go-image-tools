@@ -130,6 +130,9 @@ func Slice2Image(slice [][]float32) (image.Image, error) {
 	return img, nil
 }
 
+/*
+ * Normalises all pixel values in the range 0-1 inclusive, while preserving dynamic range
+ */
 func Normalise(image [][]float32) [][]float32 {
 
 	min, max := MinMax(image)
@@ -167,6 +170,9 @@ func Normalise(image [][]float32) [][]float32 {
 	return image
 }
 
+/*
+ * Inverts an image, while preserving dynamic range
+ */
 func Invert(image [][]float32) [][]float32 {
 
 	imageWidth, imageHeight := Dimensions(image)
@@ -205,4 +211,47 @@ func Invert(image [][]float32) [][]float32 {
 	waitGroup.Wait()
 
 	return image
+}
+
+/*
+ * Returns a subset of an image. Sometimes called a region of interest (ROI)
+ * Any pixels in the sub-image that go off the edge of the original are set to 0, so no panic condition is generated
+ */
+func SubImage(image [][]float32, topLeftX int, topLeftY int, width int, height int) [][]float32 {
+
+	// Create output image
+	subImage := make([][]float32, width)
+	for j := range subImage {
+		subImage[j] = make([]float32, height)
+	}
+
+	// Copy pixels from original image into sub-image
+	//imageWidth, imageHeight := Dimensions(image)
+	subI, subJ := 0, 0
+	for imageJ := topLeftY; imageJ < height + topLeftY; imageJ++ {
+		for imageI := topLeftX; imageI < width + topLeftX; imageI++ {
+
+			// Defer statement has to be inside function
+			func() {
+
+				// Recover from panic if we try to copy a pixel that's out of bounds
+				defer func() {
+					if r := recover(); r != nil {
+
+						// Set pixel in sub image to 0
+						subImage[subI][subJ] = 0
+						subI++
+					}
+				}()
+
+				// Copy pixel from original image to sub image
+				subImage[subI][subJ] = image[imageI][imageJ]
+				subI++
+			}()
+		}
+		subI = 0
+		subJ++
+	}
+
+	return subImage
 }

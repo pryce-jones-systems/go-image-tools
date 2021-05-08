@@ -10,7 +10,7 @@ import (
  * Calculates the pixelwise sum of two images
  * The output is normalised in the range 0-1 (inclusive), while preserving dynamic range
  */
-func Add(a [][]float32, b [][]float32) ([][]float32, error) {
+func AddImage(a [][]float32, b [][]float32, normalise bool) ([][]float32, error) {
 
 	// Check that dimensions match
 	if len(a) != len(b) {
@@ -50,14 +50,63 @@ func Add(a [][]float32, b [][]float32) ([][]float32, error) {
 	// Wait for all goroutines to finish
 	waitGroup.Wait()
 
-	return Normalise(outputImage), nil
+	// Return result
+	if normalise {
+		return Normalise(outputImage), nil
+	}
+	return outputImage, nil
+}
+
+/*
+ * Calculates the sum of an image and a scalar
+ * The output is normalised in the range 0-1 (inclusive), while preserving dynamic range, if the normalise arg is true
+ */
+func AddScalar(a [][]float32, b float32, normalise bool) ([][]float32, error) {
+
+	// Get dimensions
+	imageWidth, imageHeight := Dimensions(a)
+
+	// Create output image
+	outputImage := make([][]float32, imageWidth)
+	for j := range outputImage {
+		outputImage[j] = make([]float32, imageHeight)
+	}
+
+	// Create wait group
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(imageHeight)
+
+	// Iterate over columns
+	for j := 0; j < imageHeight; j++ {
+
+		// Process each row on its own goroutine
+		go func(j int) {
+			defer waitGroup.Done()
+
+			// Iterate over row
+			for i := 0; i < imageWidth; i++ {
+
+				// Add pixels
+				outputImage[i][j] = a[i][j] + b
+			}
+		} (j)
+	}
+
+	// Wait for all goroutines to finish
+	waitGroup.Wait()
+
+	// Return result
+	if normalise {
+		return Normalise(outputImage), nil
+	}
+	return outputImage, nil
 }
 
 /*
  * Calculates the pixelwise difference of two images
  * The output is normalised in the range 0-1 (inclusive), while preserving dynamic range
  */
-func Subtract(a [][]float32, b [][]float32) ([][]float32, error) {
+func SubtractImage(a [][]float32, b [][]float32, normalise bool) ([][]float32, error) {
 
 	// Check that dimensions match
 	if len(a) != len(b) {
@@ -97,14 +146,63 @@ func Subtract(a [][]float32, b [][]float32) ([][]float32, error) {
 	// Wait for all goroutines to finish
 	waitGroup.Wait()
 
-	return Normalise(outputImage), nil
+	// Return result
+	if normalise {
+		return Normalise(outputImage), nil
+	}
+	return outputImage, nil
+}
+
+/*
+ * Calculates the difference of an image and a scalar
+ * The output is normalised in the range 0-1 (inclusive), while preserving dynamic range, if the normalise arg is true
+ */
+func SubtractScalar(a [][]float32, b float32, normalise bool) ([][]float32, error) {
+
+	// Get dimensions
+	imageWidth, imageHeight := Dimensions(a)
+
+	// Create output image
+	outputImage := make([][]float32, imageWidth)
+	for j := range outputImage {
+		outputImage[j] = make([]float32, imageHeight)
+	}
+
+	// Create wait group
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(imageHeight)
+
+	// Iterate over columns
+	for j := 0; j < imageHeight; j++ {
+
+		// Process each row on its own goroutine
+		go func(j int) {
+			defer waitGroup.Done()
+
+			// Iterate over row
+			for i := 0; i < imageWidth; i++ {
+
+				// Subtract pixels
+				outputImage[i][j] = a[i][j] - b
+			}
+		} (j)
+	}
+
+	// Wait for all goroutines to finish
+	waitGroup.Wait()
+
+	// Return result
+	if normalise {
+		return Normalise(outputImage), nil
+	}
+	return outputImage, nil
 }
 
 /*
  * Calculates the pixelwise product of two images
  * The output is normalised in the range 0-1 (inclusive), while preserving dynamic range
  */
-func CrossProduct(a [][]float32, b [][]float32) ([][]float32, error) {
+func MultiplyImage(a [][]float32, b [][]float32, normalise bool) ([][]float32, error) {
 
 	// Check that dimensions match
 	if len(a) != len(b) {
@@ -144,14 +242,63 @@ func CrossProduct(a [][]float32, b [][]float32) ([][]float32, error) {
 	// Wait for all goroutines to finish
 	waitGroup.Wait()
 
-	return Normalise(outputImage), nil
+	// Return result
+	if normalise {
+		return Normalise(outputImage), nil
+	}
+	return outputImage, nil
+}
+
+/*
+ * Calculates the product of an image and a scalar
+ * The output is normalised in the range 0-1 (inclusive), while preserving dynamic range, if the normalise arg is true
+ */
+func MultiplyScalar(a [][]float32, b float32, normalise bool) ([][]float32, error) {
+
+	// Get dimensions
+	imageWidth, imageHeight := Dimensions(a)
+
+	// Create output image
+	outputImage := make([][]float32, imageWidth)
+	for j := range outputImage {
+		outputImage[j] = make([]float32, imageHeight)
+	}
+
+	// Create wait group
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(imageHeight)
+
+	// Iterate over columns
+	for j := 0; j < imageHeight; j++ {
+
+		// Process each row on its own goroutine
+		go func(j int) {
+			defer waitGroup.Done()
+
+			// Iterate over row
+			for i := 0; i < imageWidth; i++ {
+
+				// Multiply pixels
+				outputImage[i][j] = a[i][j] * b
+			}
+		} (j)
+	}
+
+	// Wait for all goroutines to finish
+	waitGroup.Wait()
+
+	// Return result
+	if normalise {
+		return Normalise(outputImage), nil
+	}
+	return outputImage, nil
 }
 
 /*
  * Calculates the pixelwise quotient of two images
  * The output is normalised in the range 0-1 (inclusive), while preserving dynamic range
  */
-func Divide(a [][]float32, b [][]float32) ([][]float32, error) {
+func DivideImage(a [][]float32, b [][]float32, normalise bool) ([][]float32, error) {
 
 	// Check that dimensions match
 	if len(a) != len(b) {
@@ -195,14 +342,63 @@ func Divide(a [][]float32, b [][]float32) ([][]float32, error) {
 	// Wait for all goroutines to finish
 	waitGroup.Wait()
 
-	return Normalise(outputImage), nil
+	// Return result
+	if normalise {
+		return Normalise(outputImage), nil
+	}
+	return outputImage, nil
+}
+
+/*
+ * Calculates the quotient of an image and a scalar
+ * The output is normalised in the range 0-1 (inclusive), while preserving dynamic range, if the normalise arg is true
+ */
+func DivideScalar(a [][]float32, b float32, normalise bool) ([][]float32, error) {
+
+	// Get dimensions
+	imageWidth, imageHeight := Dimensions(a)
+
+	// Create output image
+	outputImage := make([][]float32, imageWidth)
+	for j := range outputImage {
+		outputImage[j] = make([]float32, imageHeight)
+	}
+
+	// Create wait group
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(imageHeight)
+
+	// Iterate over columns
+	for j := 0; j < imageHeight; j++ {
+
+		// Process each row on its own goroutine
+		go func(j int) {
+			defer waitGroup.Done()
+
+			// Iterate over row
+			for i := 0; i < imageWidth; i++ {
+
+				// Divide pixels
+				outputImage[i][j] = a[i][j] / b
+			}
+		} (j)
+	}
+
+	// Wait for all goroutines to finish
+	waitGroup.Wait()
+
+	// Return result
+	if normalise {
+		return Normalise(outputImage), nil
+	}
+	return outputImage, nil
 }
 
 /*
  * Calculates the pixelwise square root of an image
  * The output is normalised in the range 0-1 (inclusive), while preserving dynamic range
  */
-func Sqrt(image [][]float32) [][]float32 {
+func Sqrt(image [][]float32, normalise bool) [][]float32 {
 
 	imageWidth, imageHeight := Dimensions(image)
 
@@ -235,5 +431,9 @@ func Sqrt(image [][]float32) [][]float32 {
 	// Wait for all goroutines to finish
 	waitGroup.Wait()
 
-	return Normalise(outputImage)
+	// Return result
+	if normalise {
+		return Normalise(outputImage)
+	}
+	return outputImage
 }

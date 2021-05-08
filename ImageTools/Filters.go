@@ -9,7 +9,7 @@ import (
 /*
  * Applies a kernel convolution to an image
  */
-func Convolution(image [][]float32, kernel [][]float32) ([][]float32) {
+func Convolution(image [][]float32, kernel [][]float32, normalise bool) [][]float32 {
 
 	imageWidth, imageHeight := Dimensions(image)
 	kernelWidth, kernelHeight := Dimensions(kernel)
@@ -63,22 +63,27 @@ func Convolution(image [][]float32, kernel [][]float32) ([][]float32) {
 	// Wait for all goroutines to finish
 	waitGroup.Wait()
 
-	return Normalise(outputImage)
+	if normalise {
+		return Normalise(outputImage)
+	}
+	return outputImage
 }
 
 /*
  * Applies a separated kernel convolution to an image
  */
-func SepConvolution(image [][]float32, kernelA [][]float32, kernelB [][]float32) [][]float32 {
+func SepConvolution(image [][]float32, kernelA [][]float32, kernelB [][]float32, normalise bool) [][]float32 {
 
 	// Apply first kernel
-	image = Convolution(image, kernelA)
+	image = Convolution(image, kernelA, false)
 
 	// Apply second kernel
-	image = Convolution(image, kernelB)
+	image = Convolution(image, kernelB, false)
 
-	// Normalise in the range 0-1 (inclusive) and return
-	return Normalise(image)
+	if normalise {
+		return Normalise(image)
+	}
+	return image
 }
 
 /*
@@ -94,28 +99,28 @@ func GradientMagnitude(image [][]float32) [][]float32 {
 	cpImage := image
 
 	// Apply Sobel filters
-	go func() { ch1 <- SepConvolution(image, kernels.SepSobelXPt1, kernels.SepSobelXPt2) }()
-	go func() { ch1 <- SepConvolution(cpImage, kernels.SepSobelYPt1, kernels.SepSobelYPt2) }()
+	go func() { ch1 <- SepConvolution(image, kernels.SepSobelXPt1, kernels.SepSobelXPt2, true) }()
+	go func() { ch1 <- SepConvolution(cpImage, kernels.SepSobelYPt1, kernels.SepSobelYPt2, true) }()
 	a := <- ch1
 	b := <- ch1
 
 	// Calculate cross products
 	go func() {
-		crossProduct, _ := CrossProduct(a, a)
+		crossProduct, _ := MultiplyImage(a, a, false)
 		ch2 <- crossProduct
 	}()
 	go func() {
-		crossProduct, _ := CrossProduct(b, b)
+		crossProduct, _ := MultiplyImage(b, b, false)
 		ch2 <- crossProduct
 	}()
 	a = <- ch2
 	b = <- ch2
 
 	// Sum cross products
-	a, _ = Add(a, b)
+	a, _ = AddImage(a, b, false)
 
 	// Square root sum
-	b = Sqrt(a)
+	b = Sqrt(a, false)
 
 
 	// Normalise in the range 0-1 (inclusive) and return
@@ -132,13 +137,13 @@ func PixelOrientation(image [][]float32) [][]float32 {
 	ch2 := make(chan [][]float32)
 
 	// Apply Sobel filters
-	go func() { ch1 <- SepConvolution(image, kernels.SepSobelXPt1, kernels.SepSobelXPt2) }()
-	go func() { ch2 <- SepConvolution(image, kernels.SepSobelYPt1, kernels.SepSobelYPt2) }()
+	go func() { ch1 <- SepConvolution(image, kernels.SepSobelXPt1, kernels.SepSobelXPt2, true) }()
+	go func() { ch2 <- SepConvolution(image, kernels.SepSobelYPt1, kernels.SepSobelYPt2, true) }()
 	gx := <- ch1
 	gy := <- ch2
 
 	// Calculate quotient
-	image, _ = Divide(gy, gx)
+	image, _ = DivideImage(gy, gx, false)
 
 	// Calculate arctangent
 	image = Atan(image)

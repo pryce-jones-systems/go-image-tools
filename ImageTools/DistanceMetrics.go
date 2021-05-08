@@ -1,6 +1,8 @@
 package ImageTools
 
-import "math"
+import (
+	"math"
+)
 
 /*
  * Calculates the Root Mean Square Error (RMSE), Mean Square Error (MSE), Sum Square Error (SSE) of two images
