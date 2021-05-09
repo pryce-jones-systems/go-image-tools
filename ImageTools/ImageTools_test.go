@@ -6,6 +6,44 @@ import (
 	"testing"
 )
 
+func TestMorphology(t *testing.T) {
+	img, err := LoadImage("test-images/00-original.jpg")
+	if err != nil {
+		t.Fatal()
+	}
+
+	mean, std := MeanStd(img)
+	binarised := DualThreshold(img, mean - 0.5*std, mean + 0.5*std)
+	err = SaveImage("test-images/TestMorphology__00-binarised.jpg", binarised)
+	if err != nil {
+		t.Fail()
+	}
+
+	eroded := BinaryErosion(binarised, 7)
+	err = SaveImage("test-images/TestMorphology__01-eroded.jpg", eroded)
+	if err != nil {
+		t.Fail()
+	}
+
+	dilated := BinaryDilation(binarised, 7)
+	err = SaveImage("test-images/TestMorphology__02-dilated.jpg", dilated)
+	if err != nil {
+		t.Fail()
+	}
+
+	opened := BinaryOpening(binarised, 7)
+	err = SaveImage("test-images/TestMorphology__03-opened.jpg", opened)
+	if err != nil {
+		t.Fail()
+	}
+
+	closed := BinaryClosing(binarised, 7)
+	err = SaveImage("test-images/TestMorphology__04-closed.jpg", closed)
+	if err != nil {
+		t.Fail()
+	}
+}
+
 func TestSignatureDifference(t *testing.T) {
 	imgA, err := LoadImage("test-images/00-original.jpg")
 	if err != nil {

@@ -78,30 +78,6 @@ func SignatureVector(image [][]float32) []int {
 							signature = append(signature, 0) // The same
 						}
 					}
-
-					/*
-					// Make sure we don't compare an average with itself
-					if nI == 0 && nJ == 0 {
-						break
-					}
-
-					// Classify the relationship between neighbouring averages based on how much darker/lighter the averages are
-					difference := average[aI][aJ] - average[aI + nI][aJ + nJ]
-					if difference < -2 {
-						signature = append(signature, -2) // Much darker
-						break
-					} else if -2 <= difference && difference < 0 {
-						signature = append(signature, -1) // Darker
-						break
-					} else if 0 < difference && difference <= 2 {
-						signature = append(signature, 1) // Lighter
-						break
-					} else if 2 < difference {
-						signature = append(signature, 2) // Much darker
-						break
-					}
-					signature = append(signature, 0) // The same
-					 */
 				}
 			}
 		}
